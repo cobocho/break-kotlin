@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +26,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,7 +49,7 @@ fun ShoppingList() {
     var addProductName by remember { mutableStateOf("") }
     var addProductQuantity by remember { mutableStateOf("") }
 
-    Column (
+    Column(
         modifier = Modifier
             .fillMaxSize(),
         verticalArrangement = Arrangement.Top
@@ -61,7 +59,12 @@ fun ShoppingList() {
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text("Add Item")
+            Text(
+                "Add Item",
+                modifier = Modifier.padding(8.dp)
+            )
         }
+
 //        ShoppingItemEditor(
 //
 //        )
@@ -70,11 +73,9 @@ fun ShoppingList() {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            items(products) {
-                item ->
+            items(products) { item ->
                 if (item.isEditing) {
-                    ShoppingItemEditor(item = item, onEditComplete = {
-                        editName, editQuatity ->
+                    ShoppingItemEditor(item = item, onEditComplete = { editName, editQuatity ->
                         products = products.map { it.copy(isEditing = false) }
                         val editedItem = products.find { it.id == item.id }
                         editedItem?.let {
@@ -126,7 +127,9 @@ fun ShoppingList() {
             text = {
                 Column {
                     Text("Add Shopping Item")
-                    OutlinedTextField(value = addProductName, onValueChange = { value -> addProductName = value })
+                    OutlinedTextField(
+                        value = addProductName,
+                        onValueChange = { value -> addProductName = value })
                     OutlinedTextField(
                         value = addProductQuantity.toString(),
                         onValueChange = { newText ->
@@ -152,12 +155,13 @@ fun ShoppingItemEditor(item: ShoppingItem, onEditComplete: (String, Int) -> Unit
         mutableStateOf(item.isEditing)
     }
 
-    Row( modifier = Modifier
-        .fillMaxWidth()
-        .background(Color.White)
-        .padding(8.dp),
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
+    ) {
         BasicTextField(
             value = editProductName,
             onValueChange = { editProductName = it },
@@ -189,7 +193,7 @@ fun ShoppingListItem(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
-    Row (
+    Row(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth()
@@ -198,7 +202,7 @@ fun ShoppingListItem(
                 shape = RoundedCornerShape(20)
             ),
         horizontalArrangement = Arrangement.SpaceBetween
-    ){
+    ) {
         Row {
             Text(item.name, modifier = Modifier.padding(8.dp))
             Text("${item.quantity}EA", Modifier.padding(8.dp))
