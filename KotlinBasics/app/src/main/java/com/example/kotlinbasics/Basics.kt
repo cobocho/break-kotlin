@@ -1,9 +1,13 @@
 package com.example.kotlinbasics
 
 fun main () {
-    var number = 1
+    val numbers = mutableListOf(1, 2, 3, 4, 5)
 
-    number = readln().toInt()
+    for (index in 0 .. (numbers.size) - 1) {
+        numbers[index] = numbers[index] * 2
+    }
 
-    println(number)
+    println(numbers)
 }
+
+
