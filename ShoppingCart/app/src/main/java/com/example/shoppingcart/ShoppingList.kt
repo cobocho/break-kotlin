@@ -1,5 +1,10 @@
 package com.example.shoppingcart
 
+import android.Manifest
+import android.content.Context
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -34,20 +40,55 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.navigation.NavController
+import com.example.location.LocationUtils
 
 data class ShoppingItem(
     val id: Int,
     var name: String,
     var quantity: Int,
-    var isEditing: Boolean = false
+    var isEditing: Boolean = false,
+    var address: String = ""
 )
 
 @Composable
-fun ShoppingList() {
+fun ShoppingList(
+    locationUtils: LocationUtils,
+    viewModel: LocationViewModel,
+    navController: NavController,
+    context: Context,
+    address: String
+) {
     var products by remember { mutableStateOf(listOf<ShoppingItem>()) }
     var showDialog by remember { mutableStateOf(false) }
     var addProductName by remember { mutableStateOf("") }
     var addProductQuantity by remember { mutableStateOf("") }
+
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = {
+            if (it[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+                && it[Manifest.permission.ACCESS_FINE_LOCATION] == true
+            ) {
+            } else {
+                val rationaleRequired = ActivityCompat.shouldShowRequestPermissionRationale(
+                    context as MainActivity,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) || ActivityCompat.shouldShowRequestPermissionRationale(
+                    context as MainActivity,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+
+                if (rationaleRequired) {
+                    Toast.makeText(context, "이 기능은 권한이 필요합니다.", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "이 기능은 권한이 필요합니다. 설정해주세요.", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    )
 
     Column(
         modifier = Modifier
@@ -59,15 +100,7 @@ fun ShoppingList() {
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text("Add Item")
-            Text(
-                "Add Item",
-                modifier = Modifier.padding(8.dp)
-            )
         }
-
-//        ShoppingItemEditor(
-//
-//        )
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -116,6 +149,7 @@ fun ShoppingList() {
                             products.size + 1,
                             name = addProductName,
                             quantity = addProductQuantity.toInt(),
+                            address = address
                         )
                         products = products + newItem
                         showDialog = false
@@ -137,6 +171,25 @@ fun ShoppingList() {
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
+                    Button(
+                        onClick = {
+                            if (locationUtils.hasLocationPermission((context))) {
+                                locationUtils.requestLocationUpdates(viewModel)
+                                navController.navigate("locationscreen") {
+                                    this.launchSingleTop
+                                }
+                            } else {
+                                requestPermissionLauncher.launch(
+                                    arrayOf(
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
+                                )
+                            }
+                        }
+                    ) {
+                        Text("Address")
+                    }
                 }
             }
         )
@@ -203,9 +256,21 @@ fun ShoppingListItem(
             ),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row {
-            Text(item.name, modifier = Modifier.padding(8.dp))
-            Text("${item.quantity}EA", Modifier.padding(8.dp))
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(8.dp)
+        ) {
+            Row {
+                Text(item.name, modifier = Modifier.padding(8.dp))
+                Text("${item.quantity}EA", Modifier.padding(8.dp))
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
+                Text(text = item.address)
+            }
         }
         Row(modifier = Modifier.padding(8.dp)) {
             IconButton(onClick = onEditClick) {
